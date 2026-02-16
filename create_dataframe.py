@@ -13,10 +13,15 @@ def prepare_legislatives_dataset(csv_path, txt_folder_path, threshold=30):
     csv = pd.read_csv(csv_path, encoding="utf-8")
 
     # Select relevant columns and drop rows with invalid 'titulaire-soutien' labels
+    # Sélection des colonnes pertinentes
     df_reduced = csv[["id", "contexte-tour", "titulaire-soutien"]].copy()
-    df_valid = df_reduced[~(df_reduced['titulaire-soutien'].isna() | 
-                    (df_reduced['titulaire-soutien'] == '') | 
-                    (df_reduced['titulaire-soutien'] == 'non mentionné'))]
+    df_valid = df_reduced[
+        (~(df_reduced['titulaire-soutien'].isna() | 
+        (df_reduced['titulaire-soutien'] == '') | 
+        (df_reduced['titulaire-soutien'] == 'non mentionné')))
+        & (df_reduced['contexte-tour'] == 1)
+        ].copy()
+
 
     ##  TEXT CONTENT INTEGRATION 
     path_to_files = txt_folder_path
