@@ -1,6 +1,8 @@
 # This file creates a unified and cleaned dataframe based on the results of the descriptive statistical analysis.
 
 def prepare_legislatives_dataset(csv_path, txt_folder_path, threshold=30):
+    import pandas as pd
+    import os
     """
     This function creates a unified, cleaned and exploitable dataframe
     """
@@ -42,6 +44,8 @@ def prepare_legislatives_dataset(csv_path, txt_folder_path, threshold=30):
     return df_filtered
 
 def prepare_legislatives_dataset_without_bi_categories(csv_path, txt_folder_path, threshold=30):
+    import pandas as pd
+    import os
     """
     This function creates a unified, cleaned and exploitable dataframe
     """
