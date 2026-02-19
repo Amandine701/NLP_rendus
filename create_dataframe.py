@@ -13,7 +13,7 @@ def prepare_legislatives_dataset(csv_path, txt_folder_path, threshold=30):
 
     # Select relevant columns and drop rows with invalid 'titulaire-soutien' labels
     # Sélection des colonnes pertinentes
-    df_reduced = csv[["id", "contexte-tour", "titulaire-soutien"]].copy()
+    df_reduced = csv[["id", "contexte-tour", "titulaire-soutien", "date"]].copy()
     df_valid = df_reduced[
         (~(df_reduced['titulaire-soutien'].isna() | 
         (df_reduced['titulaire-soutien'] == '') | 
@@ -56,7 +56,7 @@ def prepare_legislatives_dataset_without_bi_categories(csv_path, txt_folder_path
 
     # Select relevant columns and drop rows with invalid 'titulaire-soutien' labels
     # Sélection des colonnes pertinentes
-    df_reduced = csv[["id", "contexte-tour", "titulaire-soutien"]].copy()
+    df_reduced = csv[["id", "contexte-tour", "titulaire-soutien", "date"]].copy()
     df_valid = df_reduced[
         (~(df_reduced['titulaire-soutien'].isna() | 
         (df_reduced['titulaire-soutien'] == '') | 
