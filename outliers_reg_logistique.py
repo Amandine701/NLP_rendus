@@ -145,15 +145,15 @@ def display_centroid_outliers_report(df_full, df_outliers, model, text_col='clea
     Computes the proportion of misclassified documents within a specific outlier subset.
 
     Inputs:
-        df_full     : DataFrame complet avec toutes les distances.
-        df_outliers : DataFrame contenant uniquement les outliers détectés.
-        model       : Pipeline entraîné pour faire les prédictions.
-        text_col    : Nom de la colonne contenant le texte.
-        label_col   : Nom de la colonne des labels.
-        method_name : Nom de la méthode (pour affichage, ex: "Centroid", "KNN", "Proba").
+        df_full     : Full DataFrame 
+        df_outliers : DataFrame with only outliers
+        model       : Pipeline trained for predictions
+        text_col    : Text column
+        label_col   : Labels's column
+        method_name : Method name (centroid, knn, probas)
 
     Outputs:
-        stats_outliers (pd.DataFrame): tableau résumé des outliers et de leur proportion de mauvaise classification.
+        stats_outliers (pd.DataFrame): Summary table of outliers and their proportion of misclassification
     """
     
     # Generating predictions for outliers
@@ -164,7 +164,6 @@ def display_centroid_outliers_report(df_full, df_outliers, model, text_col='clea
     df_outliers['est_mal_classe'] = df_outliers[label_col] != df_outliers['parti_predit']
 
     # Proportion of outliers' misclassification per category
-    # We use a generic 'count' on any existing column to get total_outliers
     stats_outliers = df_outliers.groupby(label_col).agg(
         total_outliers=(label_col, 'count'),
         nb_mal_classes=('est_mal_classe', 'sum')
@@ -180,117 +179,45 @@ def display_centroid_outliers_report(df_full, df_outliers, model, text_col='clea
     return stats_outliers
 
 
-
-def rapport_outliers_style_v3(df_outliers, X_matrix, model, feature_names, classes, top_n=5):
-    """
-    Analyse les outliers en générant les prédictions et en distinguant 
-    les mots ancres (vrai parti) des mots transfuges (challenger).
-    """
-    all_reports = []
-    
-    # Extraction des composants du modèle
-    tfidf = model.named_steps['tfidf']
-    lr = model.named_steps['lr']
-    coeffs = lr.coef_
-    
-    # Calcul des probabilités et prédictions pour ces outliers
-    # On s'assure que les colonnes nécessaires existent
-    probas = model.predict_proba(df_outliers['clean_text_filtered'])
-    preds = model.predict(df_outliers['clean_text_filtered'])
-    df_probas = pd.DataFrame(probas, columns=classes)
-
-    for i, (idx, row) in enumerate(df_outliers.iterrows()):
-        vrai_parti = row['titulaire-soutien']
-        parti_predit = preds[i] # Utilisation de la prédiction fraîchement calculée
-        idx_vrai = list(classes).index(vrai_parti)
-        
-        # 1. Identification du Challenger (2nd parti le plus probable)
-        row_probas = df_probas.iloc[i].sort_values(ascending=False)
-        # Le challenger est le 2ème si le modèle a raison, le 1er si le modèle se trompe
-        challenger_parti = row_probas.index[1] if row_probas.index[0] == vrai_parti else row_probas.index[0]
-        idx_challenger = list(classes).index(challenger_parti)
-
-        # 2. Calcul des contributions (TF-IDF * Coefficient)
-        doc_vector = X_matrix[i]
-        
-        # Mots Ancres : Ce qui attache le texte au VRAI parti
-        contrib_vrai = doc_vector * coeffs[idx_vrai]
-        ancres_idx = np.argsort(contrib_vrai)[::-1][:top_n]
-        ancres = [feature_names[j] for j in ancres_idx if contrib_vrai[j] > 0]
-
-        # Mots Transfuges : Ce qui tire le texte vers le CHALLENGER
-        contrib_challenger = doc_vector * coeffs[idx_challenger]
-        trans_idx = np.argsort(contrib_challenger)[::-1][:top_n]
-        transfuges = [feature_names[j] for j in trans_idx if contrib_challenger[j] > 0]
-
-   
-        all_reports.append({
-            "ID":  row['id'],
-            "Vrai Parti": vrai_parti,
-            "Prédit": parti_predit,
-            "Challenger (2nd)": f"{challenger_parti} ({row_probas[challenger_parti]:.1%})",
-            "Mots Ancres (Confirmant)": ", ".join(ancres),
-            "Mots Transfuges (Vers Challenger)": ", ".join(transfuges),
-            "Statut": "❌ Erreur" if vrai_parti != parti_predit else "✅ Atopique"
-        })
-
-    df_report = pd.DataFrame(all_reports)
-    
-    # Stylisation finale
-    return df_report.style.set_properties(**{'text-align': 'left'})\
-        .apply(lambda x: ['color: red; font-weight: bold' if v == "❌ Erreur" else 'color: green' for v in x], 
-               subset=['Statut'], axis=0)
-
 def rapport_outliers_style(df_outliers, X_matrix, model, feature_names, classes, top_n=5, max_rows=20):
     """
-    Analyze outliers in text classification and report anchor and defector words.
+    Analyze outliers by generating predictions and identifying 
+    anchor words (supporting the true party) and defector words 
+    (pulling toward the challenger party).
 
-    INPUTS:
-    - df_outliers : pd.DataFrame
-        DataFrame containing outlier rows. Must include columns:
-        'id', 'titulaire-soutien' (true class), and 'clean_text_filtered' (preprocessed text).
-    - X_matrix : pd.DataFrame or np.array
-        Feature matrix used in model training (not directly used in this function).
-    - model : sklearn Pipeline
-        Pipeline containing at least:
-            - 'tfidf': TfidfVectorizer step
-            - 'lr': Linear classifier step with .coef_ and .predict_proba
-    - feature_names : list of str
-        List of feature names corresponding to columns of the vectorizer.
-    - classes : list of str
-        List of class labels in the same order as the classifier coefficients.
-    - top_n : int, default=5
-        Number of top contributing words to display for anchors and defectors.
-    - max_rows : int, default=20
-        Maximum number of outlier rows to analyze.
+       INPUTS:
+    - df_outliers (df) : DataFrame containing outlier observations ( 'id', 'titulaire-soutien','clean_text_filtered')
+    - X_matrix :TF-IDF matrix corresponding to df_outliers.
+        Each row must align with df_outliers order.
+    - model : sklearn Pipeline containing:
+            - 'tfidf': TfidfVectorizer
+            - 'lr': linear classifier with .coef_ and .predict_proba()
+    - feature_names (list of str) :List of vocabulary terms corresponding to columns of X_matrix.
+    - classes (list of str):  List of class labels in the same order as model coefficients.
+    - top_n (int) Number of top contributing words to extract for anchors and defectors.
 
     OUTPUT:
-    - df_report : pd.io.formats.style.Styler
-        Styled DataFrame containing, for each outlier:
-            - ID : row identifier
-            - Vrai Parti : true class with predicted probability
-            - Prédit : predicted class
-            - Challenger (2nd) : second most probable class with probability
-            - Mots Ancres (Confirmant) : top contributing words supporting true class
-            - Mots Transfuges (Vers Challenger) : top contributing words supporting challenger
-            - Statut : ✅ Atopique if predicted correctly, ❌ Erreur otherwise
-        Rows with errors are styled in bold red; correct rows in green.
-
-    NOTES:
-    - The function uses the TF-IDF vectorizer to compute word contributions
-      by multiplying document vectors with classifier coefficients.
-    - Anchor words are words that most support the true class.
-    - Defector words are words that most support the second most probable class.
+    - pd.io.formats.style.Styler df containing, for each outlier:
+            - ID
+            - True party
+            - Predicted party
+            - Challenger (2nd most probable class with probability)
+            - Anchor words (supporting the true class)
+            - Defector words (supporting the challenger class)
+            - Status (correct or misclassified)
+        Misclassified rows are displayed in bold red.
+        Correct rows are displayed in blue.
     """
     all_reports = []
-    df_outliers = df_outliers.iloc[:max_rows]
 
+    df_outliers = df_outliers.iloc[:max_rows]
+    
     # Extract model components
     tfidf = model.named_steps['tfidf']
     lr = model.named_steps['lr']
     coeffs = lr.coef_
     
-    # Compute probabilities and predictions for these outliers
+     # Compute predicted probabilities and predictions for outliers
     probas = model.predict_proba(df_outliers['clean_text_filtered'])
     preds = model.predict(df_outliers['clean_text_filtered'])
     df_probas = pd.DataFrame(probas, columns=classes, index=df_outliers.index)
@@ -301,8 +228,9 @@ def rapport_outliers_style(df_outliers, X_matrix, model, feature_names, classes,
         idx_vrai = list(classes).index(vrai_parti)
         proba_vrai = df_probas.loc[idx, vrai_parti]  # probability of the true class
         
-        # Identify the Challenger (2nd most probable class)
-        row_probas = df_probas.loc[idx].sort_values(ascending=False)
+        # Identify the Challenger (2nd most probable party)
+        row_probas = df_probas.iloc[i].sort_values(ascending=False)
+        # Challenger is 2nd if model is correct, 1st if model is wrong
         challenger_parti = row_probas.index[1] if row_probas.index[0] == vrai_parti else row_probas.index[0]
         idx_challenger = list(classes).index(challenger_parti)
 
