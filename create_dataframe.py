@@ -5,6 +5,13 @@ def prepare_legislatives_dataset(csv_path, txt_folder_path, threshold=30):
     import os
     """
     This function creates a unified, cleaned and exploitable dataframe
+
+        INPUTS:
+        - csv_path (str) :Path to the CSV file containing metadata.
+        - txt_folder_path (str): Path to the folder containing text files. 
+        - threshold : Minimum number of documents per 'titulaire-soutien' to keep the class.
+
+        OUTPUTS:df_filtered (df) : Cleaned dataframe 
     """
     
     ## DATA LOADING & INITIAL CLEANING 
@@ -12,7 +19,6 @@ def prepare_legislatives_dataset(csv_path, txt_folder_path, threshold=30):
     csv = pd.read_csv(csv_path, encoding="utf-8")
 
     # Select relevant columns and drop rows with invalid 'titulaire-soutien' labels
-    # Sélection des colonnes pertinentes
     df_reduced = csv[["id", "contexte-tour", "titulaire-soutien", "date"]].copy()
     df_valid = df_reduced[
         (~(df_reduced['titulaire-soutien'].isna() | 
@@ -40,14 +46,20 @@ def prepare_legislatives_dataset(csv_path, txt_folder_path, threshold=30):
     df_filtered = df_valid.groupby("titulaire-soutien").filter(lambda x: len(x) >= SEUIL_MIN).copy()
     df_filtered = df_filtered.reset_index(drop=True)
 
-    # Update working dataframe for downstream tasks (splits, training)
+    # Df filtered
     return df_filtered
 
 def prepare_legislatives_dataset_without_bi_categories(csv_path, txt_folder_path, threshold=30):
     import pandas as pd
     import os
     """
-    This function creates a unified, cleaned and exploitable dataframe
+    This function creates a unified, cleaned and exploitable dataframe (without bi-categories)
+     INPUTS:
+        - csv_path (str) :Path to the CSV file containing metadata.
+        - txt_folder_path (str): Path to the folder containing text files. 
+        - threshold : Minimum number of documents per 'titulaire-soutien' to keep the class.
+
+        OUTPUTS:df_filtered (df) : Cleaned dataframe without bicategories
     """
     
     ## DATA LOADING & INITIAL CLEANING 
@@ -55,7 +67,6 @@ def prepare_legislatives_dataset_without_bi_categories(csv_path, txt_folder_path
     csv = pd.read_csv(csv_path, encoding="utf-8")
 
     # Select relevant columns and drop rows with invalid 'titulaire-soutien' labels
-    # Sélection des colonnes pertinentes
     df_reduced = csv[["id", "contexte-tour", "titulaire-soutien", "date"]].copy()
     df_valid = df_reduced[
         (~(df_reduced['titulaire-soutien'].isna() | 
@@ -63,7 +74,6 @@ def prepare_legislatives_dataset_without_bi_categories(csv_path, txt_folder_path
         (df_reduced['titulaire-soutien'] == 'non mentionné')))
         & (df_reduced['contexte-tour'] == 1)
         ].copy()
-
 
     ##  TEXT CONTENT INTEGRATION 
     path_to_files = txt_folder_path
