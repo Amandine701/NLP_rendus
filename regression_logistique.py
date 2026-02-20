@@ -1,5 +1,3 @@
-
-
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -39,7 +37,6 @@ def logistic_regression_nlp(df, text_col="vlean_text_filtered", label_col="titul
         ("lr", LogisticRegression(max_iter=1000, class_weight='balanced'))
     ])
 
-
     # Hyperparameter grid
     param_grid = {
         'tfidf__max_features': [1000, 3000, 5000],
@@ -75,7 +72,6 @@ def logistic_regression_nlp(df, text_col="vlean_text_filtered", label_col="titul
     return best_model
 
     
-
 
 
 ###################### Functions to interpret coefficients of logistic regression############################
@@ -334,7 +330,6 @@ def compute_intra_party_distances(df, X, label_col):
     OUTPUT:
         - intra_distances (dict): Dictionary where keys are party names and values 
           are the average cosine distance between documents within that party.
-          Example: {'Party A': 0.12, 'Party B': 0.34, ...}
     """
     # Ensure X is an array if it's a np.matrix
     if isinstance(X, np.matrix):
