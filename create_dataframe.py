@@ -113,7 +113,7 @@ def prepare_legislatives_dataset_lisibilite(csv_path, txt_folder_path, threshold
     remove manifestos without identified support and parties with less than 30 manifestos
     """
     
-    ## DATA LOADING & INITIAL CLEANING 
+    ## Data loading and initial cleaning
     # Load original dataset
     csv = pd.read_csv(csv_path, encoding="utf-8")
 
@@ -123,7 +123,7 @@ def prepare_legislatives_dataset_lisibilite(csv_path, txt_folder_path, threshold
         ].copy()
 
 
-    ##  TEXT CONTENT INTEGRATION 
+    # Text content integration
     path_to_files = txt_folder_path
     txt_files = [f for f in os.listdir(path_to_files) if f.endswith(".txt")]
 
@@ -135,5 +135,4 @@ def prepare_legislatives_dataset_lisibilite(csv_path, txt_folder_path, threshold
     df_txt = pd.DataFrame(file_data)
     df_valid = pd.merge(df_valid, df_txt, on="id", how="left")
 
-    # Df filtered
-    return df_filtered
+    return df_valid
