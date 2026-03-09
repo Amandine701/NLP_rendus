@@ -63,3 +63,35 @@ def filter_rare_words(corpus, min_docs=5):
                        for text in corpus]
     
     return filtered_corpus
+
+def clean_for_readability(text):
+    """
+    Light preprocessing for readability metrics (Flesch, Gunning Fog, etc.).
+
+    INPUT:
+        text : Raw OCR text or document string.
+
+    OUTPUT:
+        Cleaned text suitable for readability analysis.
+    """
+
+    if text is None:
+        return ""
+
+    text = str(text)
+
+    # Basic OCR cleaning
+    text = re.sub(r'\n+', ' ', text)              # remove line breaks
+    text = re.sub(r'\s+', ' ', text)              # normalize spaces
+
+    # Remove problematic OCR characters 
+    text = re.sub(r'[\"“”‘’]', '', text)          # quotes
+    text = re.sub(r'[_*#<>]', '', text)           # artifacts
+
+    # Remove isolated numbers (often OCR noise) 
+    text = re.sub(r'\b\d+\b', '', text)
+
+    # Keep only useful punctuation for sentence detection 
+    text = re.sub(r'[^\w\s\.,;:!?-]', '', text)
+
+    return text.strip()

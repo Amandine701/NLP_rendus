@@ -1,10 +1,12 @@
- stats_descriptives permet d'étudier 
-- la composition du csv et des fichiers . text 
-- de choisir la variable cible (liste ou soutien)
-- la complexité linguistique
-- de déterminer les modalités à conserver pour la variable cible (sémantiquement et statistiquement représentatives)
+The .py files contain functions that are used in the notebooks.
 
-create_dataframe crée un df unifié (csv + text), nettoyé (modalités non renseignées ou non représentatives) et 
-exploitable (modalités statistiquement et sémantiquement représentatives)
+The .ipynb notebooks can be run independently thanks to the use of functions from the .py files.
+However, the report and analysis follow the following workflow:
+stats_descriptives.ipynb
+regression_logistique.ipynb (sections 1 to 3)
+embeddings.ipynb
+regression_logistique.ipynb (sections 4 to 5)
+score_lisibilite.ipynb
 
-Le regroupement des modalités sémantiquement proches sera traité après un premier essai de classification (regression logiqtique)
+
+

@@ -143,17 +143,7 @@ def detect_proba_outliers(df, model, threshold=0.30, label_col='titulaire-soutie
 def display_centroid_outliers_report(df_full, df_outliers, model, text_col='clean_text_filtered', label_col="titulaire-soutien", method_name="Centroid"):
     """
     Computes the proportion of misclassified documents within a specific outlier subset.
-
-    Inputs:
-        df_full     : Full DataFrame 
-        df_outliers : DataFrame with only outliers
-        model       : Pipeline trained for predictions
-        text_col    : Text column
-        label_col   : Labels's column
-        method_name : Method name (centroid, knn, probas)
-
-    Outputs:
-        stats_outliers (pd.DataFrame): Summary table of outliers and their proportion of misclassification
+    Ensures that all parties appear in the summary table, even if no outliers exist for some.
     """
     
     # Generating predictions for outliers
@@ -163,14 +153,20 @@ def display_centroid_outliers_report(df_full, df_outliers, model, text_col='clea
     # Comparing predictions and true labels
     df_outliers['est_mal_classe'] = df_outliers[label_col] != df_outliers['parti_predit']
 
+    # List of all parties (classes)
+    all_parties = df_full[label_col].unique()
+
     # Proportion of outliers' misclassification per category
     stats_outliers = df_outliers.groupby(label_col).agg(
         total_outliers=(label_col, 'count'),
         nb_mal_classes=('est_mal_classe', 'sum')
     )
 
+    # Ensure all parties appear
+    stats_outliers = stats_outliers.reindex(all_parties, fill_value=0)
+
     stats_outliers['proportion_misclassification_%'] = (
-        stats_outliers['nb_mal_classes'] / stats_outliers['total_outliers'] * 100
+        stats_outliers['nb_mal_classes'] / stats_outliers['total_outliers'].replace(0,1) * 100
     ).round(2)
 
     print(f"=== Proportion of {method_name} outliers' misclassification per category ===")
@@ -179,7 +175,7 @@ def display_centroid_outliers_report(df_full, df_outliers, model, text_col='clea
     return stats_outliers
 
 
-def rapport_outliers_style(df_outliers, X_matrix, model, feature_names, classes, top_n=5, max_rows=20):
+def rapport_outliers_style(df_outliers, X_matrix, model, feature_names, classes, top_n=5, max_rows=None):
     """
     Analyze outliers by generating predictions and identifying 
     anchor words (supporting the true party) and defector words 
