@@ -65,7 +65,7 @@ def logistic_regression_nlp(df, text_col="vlean_text_filtered", label_col="titul
     ConfusionMatrixDisplay.from_predictions(y, y_pred, cmap='Blues', ax=ax)
     ax.set_xticklabels(ax.get_xticklabels(), rotation=90, fontsize=8)
     ax.set_yticklabels(ax.get_yticklabels(), fontsize=8)
-    plt.title("Confusion Matrix (CV)")
+    #plt.title("Confusion Matrix (CV)")
     plt.tight_layout()
     plt.show()
 
